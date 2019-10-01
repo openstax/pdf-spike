@@ -22,15 +22,34 @@ conveying the right information to the people that need it.
 
 ### Background (PLAN)
 
-
+This spike is to allow the developers free experimentation to prototype
+putting together a Concourse pipeline that produces a Baked PDF.
+The pipeline can be trigger however the developer sees fit.
+The resulting PDF can be saved wherever the develper sees fit.
+ 
 ### Current condition (PLAN)
 
+[cnx-recipes][cnx-recipes] provides most of the functionality
+needed to produce a PDF.
+This uses [cnx-archive][cnx-archive],
+which acts as a typical backend web application.
+It exposes a web API that we use to acquire content for producing a PDF.
+
+(Legacy PDF generation is not worth discussing.)
 
 ### Goal / Target Condition (PLAN)
 
+We know how it is architected at the moment is developer focused,
+but we are choosing to ignore that in favor of virtically slicing
+our idealistic goals with that of constrained resources and time.
+
+1. A PDF is produced for the requested book
+1. The PDF is put somewhere it can be accessed (for analysis purposes only)
+1. The pipeline doesn't clog concourse.openstax.org
 
 ### Root Cause Analysis (PLAN)
 
+Textbook developers would like to automate the generation of PDFs using HTML, because doing this by hand is boring.
 
 ### Epics, Stories, and Task Cards (DO)
 
@@ -38,7 +57,11 @@ conveying the right information to the people that need it.
  
 ### Confirmation (CHECK)
 
-Given ... when ... then ...
+- Given a book, when a request is made to produce a Baked PDF then produce the Baked PDF.
+- Given a produced PDF, when the PDF is completely put togetehr, then put it in place where it can be retrieved.
+
+
+<!-- Given ... when ... then ... -->
 
 
 ### Follow up (ACT)
