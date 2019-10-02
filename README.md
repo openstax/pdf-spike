@@ -67,6 +67,29 @@ Textbook developers would like to automate the generation of PDFs using HTML, be
 ### Follow up (ACT)
 
 
+## Begin with the end in mind
+
+> Begin with the End in Mind means to begin each day, task, or project with a clear vision of your desired direction and destination, and then continue by flexing your proactive muscles to make things happen. -- Covey'ism
+
+This isn't set in stone! This is just the vision at the moment. It can be thrown away, amended, rewritten, phase shifted, or ignored. But please don't ignore it because that'll defeat the purpose of the exercise.
+
+## A vision of our desired outcome
+
+The system can be broken down into about three to four compoents. The other three major components are the [invocation](#invocation), [work](#work) and [persistence](#persistence). The fourth has is [error handling](#error-handling), which is interspersed in the invocation, work and persistence components. Combined these components make up the desired outputs for the "Baked Outputs" system.
+
+The *Event Service* is not a component, but instead a hub element that is a fixed concept in this vision. The *Event Service* accepts events from an invoker, communicates the state of the event with the worker and successfully finalizes the state with the persister.
+
+### Invocation
+
+### Work
+
+### Persistence
+
+### Error Handling
+
+
+
+
 ## License
 
 This software is subject to the provisions of the GNU Affero General
