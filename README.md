@@ -92,14 +92,21 @@ This example of an invocation compoenent utilizes the database table insertions 
 
 ### Work
 
+The work at this time is broken down into four separate work components that cascade their artifacts from one to the next. This cascading sequence is extraction -> baking -> pdf.
 
+#### Extraction Work
+
+#### Baking Work
+
+#### PDF Work
 
 ### Persistence
 
+In almost all cases we are saying S3 is the persistence medium. So while this is technically a component that could generally represent some type of storage, we've made a decision to throw all our work artifacts into S3.
+
 ### Error Handling
 
-
-
+Error handling is interspersed in the invocation, work and persistence components. We're primarily dealing with recognizing an error and conveying that problem **state** to the *Event Service*.
 
 ## License
 
