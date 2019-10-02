@@ -81,7 +81,18 @@ The *Event Service* is not a component, but instead a hub element that is a fixe
 
 ### Invocation
 
+The invocation component is the part of the system that invokes the work by kicking it off. How this happens is up for debate and interpretation. For example, in the production scenario at this time we believe the database will be the invoker of work. However, it's just as easy to say that this component could be fulfilled with chatops (aka ce-bot in slack). The point is that this component is the catalyst for work to be pushed into action.
+
+#### Database Invocation
+
+This example of an invocation compoenent utilizes the database table insertions operations to create events in the Event Service.
+
+![Database Invocation & Event Service](img/db-invocation.png)
+[Edit URL](https://sequencediagram.org/index.html#initialData=C4S2BsFMAIBEENjwEbwM4wJIDsBuB7AY0RH22gDJoBRXSbYaAZUgCdcRDIAobgE0Qp0MAEQAlSAAd8aMPlYBPADrYESVBhHR00Psm6T4rUIRCGG0EbXqMW7TpC07IdBv0EbRARQCukPypqQhgqABQSfCBoAPwAlE5o0ACOfn68-MgAtAB8LjYAXGTQINgYxqTkwPgqwAAWMAAGALb4fD5QaA3Q6lDc8ISguIgweW6jwDkp-pD5kj5otd34lqzwAO4iKuPJqTx8kP2Dw9DjGTnjheQlZaBFVTX10A3gw2jAAPotbR1dPTyHICGwBGrmA3HGk12s3miyqllQAGtIHxNthtlM0vsAUCQTZeEA)
+
 ### Work
+
+
 
 ### Persistence
 
