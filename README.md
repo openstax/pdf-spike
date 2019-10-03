@@ -94,11 +94,20 @@ This example of an invocation compoenent utilizes the database table insertions 
 
 The work at this time is broken down into four separate work components that cascade their artifacts from one to the next. This cascading sequence is extraction -> baking -> pdf.
 
+![Overview of the work sequence](img/work-sequence.png)
+[Edit URL](https://sequencediagram.org/index.html#initialData=C4S2BsFMAIEECMDOwBOBDAxsaAHRBXSAEwHtoSA3SFCkSAd3IDNpgALGeklAa2kUgBHQgDsMkAFASiaYGnhoB0AEQBFQoQA6IgCKz5iyNoAUAJWIhEAfgCUy6IujDIhCTjQpQGEO5HZlAKJUftAAytS04vaOkMHAbh5ePmh+AOYoJPg40ADEciLQAMIkYpkoSgAKPpDgICKQiAmeIN6+-gEAHqiYoCXQVTg1dZDRiNCQXehYTUltKgBCaDx1qf3VtfWj0Ao8ku7NrSn+FToAYmuDGyMOYzhETBKQIkTS+gpKyqEAzFuIX1JSHLjSY9EAlR5xAA8AFpoRNulgAFyQxAgABekERAA4AHwAcRI2DQKnhU16InssSewCsElBFFkMFJPTpWBADOATLiEOp0JxzKRKPRmNxAE0GgAaODzQoARgATP8iJB6Yzxtz4CQOtAUCBUmxsCQWALgMjURjsfyQVgxuwYBgSpyQkwMgBbbR2hwoDBsdmQAD0KEgOBIqOA3AAntAZHJ3pITXy-mbhZbEGgqDqGvhwMBGgn+XFkxbcbAZQqvgA6ZBqgC8-HwGHEiEaytVnOBCPiba51J5fj5VL8RZFOO6IjDYIKpblio9ZGUOxWlLiY2crlbbI5Pb8gO2SxWfeAMOhO0xQuL+MJDhUi5EqWX1Np3b3u1ZoC36t7g+AfNPw8t4qIFK07ltIKqbmq34SJq2q6vqhosH+54jqetocNADp+NS0AuiQ7r1NanJEBhjrYTg+DYHUYT-KeiZfP+uJphmQYEDmjS0QW1IMTiIGKlWcjtnWBCNg0Lbge+aqnm+7KQdy34DoWyGWmOE59LxXxziodxMA+firhokgbhJ7ZQbu2mHse2ncQSRIqFQ5STsQuD4PAtQYLIk72GAkCuk+EHtuZz5QfJOJWUpYqStKM5KuJMkmRqWo6nqBrMLg9zcTgGREA2DTXtpOFutop7EZhTqUQU3xuPcdHcUxMAsdmuZVUwClceFPFlnx1aCfWInNmBz6Bf527xCF37cSpYCTlF5aacoQapJYnIoLpuZOAZAKbVt207bte1bUAA)
+
 #### Extraction Work
+
+![Conteent extraction](img/extraction-work.png)
 
 #### Baking Work
 
+![Baking of the content](img/baking-work.png)
+
 #### PDF Work
+
+![Producing the PDF](img/pdf-work.png)
 
 ### Persistence
 
