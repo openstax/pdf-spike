@@ -1,0 +1,86 @@
+# A pipeline that is triggered from events coming from an external service.
+---
+
+###
+#  Resource Types
+###
+
+resource_types:
+
+  - name: content-events
+    type: docker-image
+    source:
+      repository: openstax/content-event-resource
+      tag: 0.1.0
+
+###
+#  Resources
+###
+
+resources:
+  - name: pdf-spike
+    type: git
+    source:
+      uri: https://github.com/openstax/pdf-spike.git
+
+  - name: cnx-recipes
+    type: git
+    source:
+      uri: https://github.com/openstax/cnx-recipes.git
+
+# TODO: create this bucket
+ - name: ce-pdfs
+    type: s3
+    source:
+      bucket: ce-pdfs
+      access_key_id: ((aws-access-key-id))
+      secret_access_key: ((aws-secret-access-key))
+      skip_download: true
+
+  - name: events
+    type: content-events
+    source:
+      api_root: http://content-events-api:5000
+      status: queued
+
+###
+#  Pipeline Jobs
+###
+
+jobs:
+  - name: bakery
+    plan:
+      # Receiving an event
+      - get: events
+        trigger: true
+        version: every
+
+      # - get: pdf-spike
+      # - get: cnx-recipes
+
+      # Fetching book
+      - task: fetch book
+        file: pdf-spike/bakery/tasks/fetch-book.yml
+
+      # Assembling book
+      - task: assemble-book
+        file: pdf-spike/bakery/tasks/assemble-book.yml
+
+      # Baking book
+      - task: bake-book
+        file: pdf-spike/bakery/tasks/bake-book.yml
+
+      # Mathifying book
+      - task: mathify-book
+        file: pdf-spike/bakery/tasks/mathify-book.yml
+
+      # Building PDF
+      - task: build-pdf
+        file: pdf-spike/bakery/tasks/build-pdf.yml
+
+      # Saving PDF
+      - put: ce-pdfs
+        params:
+          file: artifacts/*
+          acl: public-read
+          content_type: application/pdf
