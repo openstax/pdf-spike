@@ -55,32 +55,96 @@ jobs:
         trigger: true
         version: every
 
+      # XXX I haz event?
+      - task: print the event
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source:
+              repository: python
+              tag: latest
+          inputs:
+            - name: events
+          run:
+            path: bash
+            args:
+              - -ceuxs
+              - |
+                cd events
+                # Show the data structure
+                ls -lah .
+                # Print the event ID
+                cat id
+                # Print metadata about the event
+                cat metadata.json
+
+      # XXX I haz event!
+      - put: events
+        params:
+          acknowledge: true
+
+      # XXX I can updat event?
+      - task: randomly update the state
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source:
+              repository: python
+              tag: latest
+          inputs:
+            - name: events
+          # random number state updating where exit code 0=pass & 1=fail
+          run:
+            path: bash
+            args:
+              - -ceuxs
+              - |
+                exit $((RANDOM % 2))
+        on_success:
+          put: events
+          params:
+            state: 'complete'
+        on_fail:
+          put: events
+          params:
+            state: 'failed'
+        on_error:
+          put: events
+          params:
+            state: 'failed'
+        on_abort:
+          put: events
+          params:
+            state: 'retry'
+
       # - get: pdf-spike
       # - get: cnx-recipes
 
-      # Fetching book
-      - task: fetch book
-        file: pdf-spike/bakery/tasks/fetch-book.yml
+      # # Fetching book
+      # - task: fetch book
+      #   file: pdf-spike/bakery/tasks/fetch-book.yml
 
-      # Assembling book
-      - task: assemble-book
-        file: pdf-spike/bakery/tasks/assemble-book.yml
+      # # Assembling book
+      # - task: assemble-book
+      #   file: pdf-spike/bakery/tasks/assemble-book.yml
 
-      # Baking book
-      - task: bake-book
-        file: pdf-spike/bakery/tasks/bake-book.yml
+      # # Baking book
+      # - task: bake-book
+      #   file: pdf-spike/bakery/tasks/bake-book.yml
 
-      # Mathifying book
-      - task: mathify-book
-        file: pdf-spike/bakery/tasks/mathify-book.yml
+      # # Mathifying book
+      # - task: mathify-book
+      #   file: pdf-spike/bakery/tasks/mathify-book.yml
 
-      # Building PDF
-      - task: build-pdf
-        file: pdf-spike/bakery/tasks/build-pdf.yml
+      # # Building PDF
+      # - task: build-pdf
+      #   file: pdf-spike/bakery/tasks/build-pdf.yml
 
-      # Saving PDF
-      - put: ce-pdfs
-        params:
-          file: artifacts/*
-          acl: public-read
-          content_type: application/pdf
+      # # Saving PDF
+      # - put: ce-pdfs
+      #   params:
+      #     file: artifacts/*
+      #     acl: public-read
+      #     content_type: application/pdf
