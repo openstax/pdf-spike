@@ -1,0 +1,22 @@
+#!/usr/bin/env python3
+import json
+import sys
+
+import requests
+
+
+source = json.load(sys.stdin)
+scheme = source['source'].get('scheme', 'https')
+host = source['source']['host']  # required
+port = source['source'].get('port', '443')
+
+base_url = f"{scheme}://{host}:{port}"
+
+url = f"{base_url}/api/events/select"
+
+resp = requests.post(url)
+event = resp.json()
+
+output = [{"eid": event['id']}]
+print(json.dumps(output))
+sys.exit(0)  # explicit return code

@@ -1,0 +1,35 @@
+#!/usr/bin/env python3
+import json
+import sys
+from pathlib import Path
+
+import requests
+
+dest_dir = Path(sys.argv[1])
+
+source = json.load(sys.stdin)
+scheme = source['source'].get('scheme', 'https')
+host = source['source']['host']  # required
+port = source['source'].get('port', '443')
+eid = source['version']['eid']
+params = source['params']
+
+base_url = f"{scheme}://{host}:{port}"
+url = f"{base_url}/api/events/{eid}"
+
+print(f"Looking up details about event '{eid}'...", file=sys.stderr)
+
+# Retrieve info about the event
+resp = requests.get(url)
+# TODO: error handling when no-such event exists
+data = resp.json()
+with (dest_dir / 'id').open('w') as fb:
+    fb.write(data['id'])
+with (dest_dir / 'metadata.json').open('w') as fb:
+    json.dump(data, fb)
+
+print(f"Successful obtained details for event '{eid}':\n{json.dumps(data)}", file=sys.stderr)
+
+output = {"version": {"eid": event['id']}}
+print(json.dumps(output))
+sys.exit(0)  # explicit return code

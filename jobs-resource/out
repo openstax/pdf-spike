@@ -1,0 +1,36 @@
+#!/usr/bin/env python3
+import json
+import sys
+from pathlib import Path
+
+import requests
+
+src_dir = Path(sys.argv[1])
+
+source = json.load(sys.stdin)
+scheme = source['source'].get('scheme', 'https')
+host = source['source']['host']  # required
+port = source['source'].get('port', '443')
+params = source['params']
+
+with (src_dir / 'id').open('r') as fb:
+    eid = fb.read().strip()
+
+base_url = f"{scheme}://{host}:{port}"
+url = f"{base_url}/api/events/{eid}"
+
+# Take a specific action
+if params.get('acknowledge'):
+    # acknowledge receipt of the event with the service
+    # TODO: ack needs to be able to say this event is no longer available for acknowledgement
+    resp = resp.post(f"{url}/ack")
+elif params.get('state'):
+    # updated the event with the given state
+    state = params.get('state')
+    resp = requests.put(url, data={'state': state})
+else:
+    raise RuntimeError("no required action was passed")
+
+output = [{"eid": event['id']}]
+print(json.dumps(output))
+sys.exit(0)  # explicit return code
