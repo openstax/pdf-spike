@@ -13,6 +13,7 @@
 * [Bakery](#bakery)
 * [Workflow Event Resource](#workflow-event-resource)
 * [Workflow Service](#workflow-service)
+  * [Deployment for dev work](./workflow-service/README.md#deployment-process-for-dev-work)
 * [License](#license)
 
 ## A3 Planning
@@ -104,4 +105,4 @@ Copyright (c) 2019 Rice University
 [vertical-slice]: https://medium.com/@thorbjorn.sigberg/the-art-of-vertical-slicing-871ee32600a8
 [roadmap]: https://github.com/openstax/cnx/wiki#product-roadmap
 [gob-tool]: https://cnx.org/a/content-status/
-[oct-4-spike-doc]: https://docs.google.com/document/d/1JjgN5MBUlkZpFWLJSetCGWubcADsN_nq6KUfpxLy8Hk/edit#heading=h.r9lownxz4ez5
+[oct-4-swarm-doc]: https://docs.google.com/document/d/1JjgN5MBUlkZpFWLJSetCGWubcADsN_nq6KUfpxLy8Hk/edit#heading=h.r9lownxz4ez5
