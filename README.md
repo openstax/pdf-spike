@@ -52,7 +52,7 @@ and provide information on job progress.
 3. The frontend displays metadata and status information on jobs. The UI used by
 users to create new jobs. Main consumer of information from the backend.
 
-[Oct 4th, Spike Document][oct-4-spike-doc] describes the outcome in more detail.
+[Oct 4th, Swarm Document][oct-4-swarm-doc] describes the outcome in more detail.
 
 ### Root Cause Analysis (PLAN)
 
@@ -104,3 +104,4 @@ Copyright (c) 2019 Rice University
 [vertical-slice]: https://medium.com/@thorbjorn.sigberg/the-art-of-vertical-slicing-871ee32600a8
 [roadmap]: https://github.com/openstax/cnx/wiki#product-roadmap
 [gob-tool]: https://cnx.org/a/content-status/
+[oct-4-spike-doc]: https://docs.google.com/document/d/1JjgN5MBUlkZpFWLJSetCGWubcADsN_nq6KUfpxLy8Hk/edit#heading=h.r9lownxz4ez5
