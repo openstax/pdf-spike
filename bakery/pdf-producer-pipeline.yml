@@ -1,0 +1,219 @@
+---
+resource_types:
+  - name: workflow-events
+    type: docker-image
+    source:
+      repository: openstax/workflow-event-resource
+
+  - name: slack
+    type: docker-image
+    source:
+      repository: karenc/concourse-slack-resource
+
+resources:
+  - name: workflow-events-queued
+    type: workflow-events
+    source:
+      api_root: https://cc1.cnx.org/api
+      status_id: 1
+
+  - name: event-update
+    type: workflow-events
+    source:
+      api_root: https://cc1.cnx.org/api
+
+  - name: pdf-spike
+    type: git
+    source:
+      uri: https://github.com/openstax/pdf-spike.git
+
+  - name: cnx-recipes
+    type: git
+    source:
+      uri: https://github.com/openstax/cnx-recipes.git
+
+  - name: ce-bot
+    type: slack
+    source:
+      user_access_token: ((slack-user-token))
+      bot_access_token: ((slack-bot-token))
+      bot_user_id: ((slack-bot-user-id))
+      regexp: '^<@((slack-bot-user-id))>\s+pdf-spike\s+(\S+)\s+(\S+)\s*$'
+    check_every: 10s
+
+  - name: ce-bot-message
+    type: slack
+    source:
+      user_access_token: ((slack-user-token))
+      bot_access_token: ((slack-bot-token))
+      bot_user_id: ((slack-bot-user-id))
+
+  - name: ce-pdf-spike
+    type: s3
+    source:
+      bucket: ce-pdf-spike
+      access_key_id: ((aws-access-key-id))
+      secret_access_key: ((aws-secret-access-key))
+      skip_download: true
+
+jobs:
+  - name: bakery
+    plan:
+      - get: workflow-events-queued
+        trigger: true
+        version: every
+
+      - put: ce-bot-message
+        params:
+          text: "PDF Producer started processing `{{workflow-events-queued/collection_id}}`."
+          channel: "{{ce-bot/channel}}"
+          thread_ts: "{{ce-bot/ts}}"
+      - put: event-update
+        params:
+          id: workflow-events-queued/id
+          status_id: 3
+
+      - get: pdf-spike
+      - get: cnx-recipes
+
+      - task: look up book
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source:
+              repository: openstax/nebuchadnezzar
+
+          inputs:
+            - name: ce-bot
+          outputs:
+            - name: book
+
+          run:
+            path: /bin/bash
+            args:
+              - -cxe
+              - |
+                exec 2> >(tee book/stderr >&2)
+                tail ce-bot/*
+                cp ce-bot/message_text_0 book/name
+                cp ce-bot/message_text_1 book/server
+                wget -q https://raw.githubusercontent.com/openstax/cnx-recipes/master/books.txt
+                set +x
+                . books.txt
+                set -x
+                for book_config in "${BOOK_CONFIGS[@]}"
+                do
+                  read -r book_name recipe_name _ book_colid _ <<< "$book_config"
+                  if [ "$book_name" == "$(cat book/name)" ]
+                  then
+                    echo -n "$recipe_name" >book/recipe
+                    echo -n "$book_colid" >book/collection_id
+                  fi
+                done
+                echo -n latest >book/version
+                if [ ! -f book/collection_id ]
+                then
+                  set +x
+                  echo "Book not found" >book/stderr
+                  exit 1
+                fi
+        on_failure:
+          put: ce-bot-message
+          params:
+            text: "Failed to look up book `{{ce-bot/message_text_0}}`:\n\n```\n{{book/stderr}}```"
+            channel: "{{ce-bot/channel}}"
+            thread_ts: "{{ce-bot/ts}}"
+
+      - put: ce-bot-message
+        params:
+          text: "Fetching book `{{book/name}}` (`{{book/collection_id}}`) from `{{book/server}}`"
+          channel: "{{ce-bot/channel}}"
+          thread_ts: "{{ce-bot/ts}}"
+
+      - task: fetch book
+        file: pdf-spike/bakery/tasks/fetch-book.yml
+        on_failure:
+          put: ce-bot-message
+          params:
+            text: "Failed to fetch book `{{book/name}}`\n\n```\n{{fetched-book/stderr}}```"
+            channel: "{{ce-bot/channel}}"
+            thread_ts: "{{ce-bot/ts}}"
+
+      - put: ce-bot-message
+        params:
+          text: "Assembling book `{{book/name}}`"
+          channel: "{{ce-bot/channel}}"
+          thread_ts: "{{ce-bot/ts}}"
+
+      - task: assemble-book
+        file: pdf-spike/bakery/tasks/assemble-book.yml
+        on_failure:
+          put: ce-bot-message
+          params:
+            text: "Failed to assemble book `{{book/name}}`\n\n```\n{{assembled-book/stderr}}```"
+            channel: "{{ce-bot/channel}}"
+            thread_ts: "{{ce-bot/ts}}"
+
+      - put: ce-bot-message
+        params:
+          text: "Baking book `{{book/name}}`"
+          channel: "{{ce-bot/channel}}"
+          thread_ts: "{{ce-bot/ts}}"
+
+      - task: bake-book
+        file: pdf-spike/bakery/tasks/bake-book.yml
+        on_failure:
+          put: ce-bot-message
+          params:
+            text: "Failed to bake book `{{book/name}}`\n\n```\n{{baked-book/stderr}}```"
+            channel: "{{ce-bot/channel}}"
+            thread_ts: "{{ce-bot/ts}}"
+
+      - put: ce-bot-message
+        params:
+          text: "Mathifying book `{{book/name}}`"
+          channel: "{{ce-bot/channel}}"
+          thread_ts: "{{ce-bot/ts}}"
+
+      - task: mathify-book
+        file: pdf-spike/bakery/tasks/mathify-book.yml
+        on_failure:
+          put: ce-bot-message
+          params:
+            text: "Failed to mathify book `{{book/name}}`\n\n```\n{{mathified-book/stderr}}```"
+            channel: "{{ce-bot/channel}}"
+            thread_ts: "{{ce-bot/ts}}"
+
+      - put: ce-bot-message
+        params:
+          text: "Building pdf for `{{book/name}}`"
+          channel: "{{ce-bot/channel}}"
+          thread_ts: "{{ce-bot/ts}}"
+
+      - task: build-pdf
+        file: pdf-spike/bakery/tasks/build-pdf.yml
+        on_failure:
+          put: ce-bot-message
+          params:
+            text: "Failed to build pdf for book `{{book/name}}`\n\n```\n{{artifacts/stderr}}```"
+            channel: "{{ce-bot/channel}}"
+            thread_ts: "{{ce-bot/ts}}"
+
+      - put: ce-pdf-spike
+        params:
+          file: artifacts/*.pdf
+          acl: public-read
+          content_type: application/pdf
+        on_failure:
+          put: ce-bot-message
+          params:
+            text: "Failed to upload pdf for `{{book/name}}` to s3"
+            channel: "{{ce-bot/channel}}"
+            thread_ts: "{{ce-bot/ts}}"
+
+      - put: ce-bot-message
+        params:
+          text: "`{{book/name}}` pdf can be downloaded at <https://ce-pdf-spike.s3.amazonaws.com/{{book/name}}.pdf|https://ce-pdf-spike.s3.amazonaws.com/{{book/name}}.pdf>"
+          channel: "{{ce-bot/channel}}"
+          thread_ts: "{{ce-bot/ts}}"
