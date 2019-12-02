@@ -1,5 +1,5 @@
 version: '3.7'
 services:
-  backend:
+  concourse:
     depends_on:
       - db
