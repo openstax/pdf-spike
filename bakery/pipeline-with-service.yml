@@ -142,6 +142,12 @@ jobs:
               - -cxe
               - |
                 exec 2> >(tee book/stderr >&2)
+                cp book-title/id              book/id
+                cp book-title/collection_id   book/collection_id
+                cp book-title/version         book/version
+                cp book-title/server          book/server
+                cp book-title/name            book/name
+                cp book-title/recipe          book/recipe
                 neb get -r -d "./temp" "$(cat book-title/server | cut -f1 -d".")" "$(cat book-title/collection_id)" "$(cat book-title/version)"
                 mv temp/* book
 
@@ -159,8 +165,6 @@ jobs:
         trigger: true
         passed: [fetch-book]
       - get: pdf-spike
-      - task: look-up-book
-        file: pdf-spike/bakery/tasks/t-book-lookup.yml
       - get: s3
       - task: assemble-book-via-neb
         #file: pdf-spike/bakery/tasks/t-assemble-book.yml
@@ -202,8 +206,6 @@ jobs:
         trigger: true
         passed: [assemble-book]
       - get: pdf-spike
-      - task: look-up-book
-        file: pdf-spike/bakery/tasks/t-book-lookup.yml
       - get: s3
       - get: cnx-recipes
       - task: bake-book-via-easy-bake
@@ -216,7 +218,6 @@ jobs:
               repository: openstax/cnx-easybake
 
           inputs:
-            - name: book-title
             - name: s3
             - name: cnx-recipes
           outputs:
@@ -230,8 +231,8 @@ jobs:
                 exec 2> >(tee book/stderr >&2)
                 rm -f s3/stderr
                 book_dir="book"
-                cnx-easybake "cnx-recipes/recipes/output/$(cat book-title/recipe).css" "s3/$book_dir/collection.assembled.xhtml" "$book_dir/collection.baked.xhtml"
-                style_file="cnx-recipes/styles/output/$(cat book-title/name)-pdf.css"
+                cnx-easybake "cnx-recipes/recipes/output/$(cat s3/book/recipe).css" "s3/$book_dir/collection.assembled.xhtml" "$book_dir/collection.baked.xhtml"
+                style_file="cnx-recipes/styles/output/$(cat s3/book/name)-pdf.css"
                 if [ -f "$style_file" ]
                 then
                   cp "$style_file" $book_dir/
@@ -254,8 +255,6 @@ jobs:
         trigger: true
         passed: [bake-book]
       - get: pdf-spike
-      - task: look-up-book
-        file: pdf-spike/bakery/tasks/t-book-lookup.yml
       - get: s3
       - task: mathify-book-via-mathify
         #file: pdf-spike/bakery/tasks/t-mathify-book.yml
@@ -297,8 +296,6 @@ jobs:
         trigger: true
         passed: [mathify-book]
       - get: pdf-spike
-      - task: look-up-book
-        file: pdf-spike/bakery/tasks/t-book-lookup.yml
       - get: s3
       - task: pdf-book-via-princexml
         #file: pdf-spike/bakery/tasks/t-build-pdf.yml
@@ -310,7 +307,6 @@ jobs:
               repository: openstax/princexml
               tag: latest
           inputs:
-            - name: book-title
             - name: s3
           outputs:
             - name: artifacts
@@ -323,8 +319,8 @@ jobs:
               - |
                 exec 2> >(tee s3/book/stderr >&2)
                 rm -f artifacts/stderr
-                prince -v --output="artifacts/$(cat book-title/name).pdf" "s3/book/collection.assembled.xhtml"
-                echo -n "https://ce-pdf-spike.s3.amazonaws.com/artifacts/$(cat book-title/name).pdf" >artifacts/pdf_url
+                prince -v --output="artifacts/$(cat s3/book/name).pdf" "s3/book/collection.assembled.xhtml"
+                echo -n "https://ce-pdf-spike.s3.amazonaws.com/artifacts/$(cat s3/book/name).pdf" >artifacts/pdf_url
       - put: s3-artifacts
         params:
           file: artifacts/*.pdf
