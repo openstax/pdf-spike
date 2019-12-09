@@ -40,6 +40,7 @@ resources:
     type: git
     source:
       uri: https://github.com/openstax/pdf-spike.git
+      branch: additional-logging
 
   - name: workflow-events-queued
     type: workflow-events
@@ -76,11 +77,31 @@ jobs:
         trigger: true
         passed: [claim-work]
       - get: pdf-spike
-    #- get: cnx-recipes
       - task: look-up-book
         file: pdf-spike/bakery/tasks/t-book-lookup.yml
       - task: fetch-book-via-neb
-        file: pdf-spike/bakery/tasks/t-fetch-book.yml
+        #file: pdf-spike/bakery/tasks/t-fetch-book.yml
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source:
+              repository: openstax/nebuchadnezzar
+              tag: latest
+
+          inputs:
+            - name: book-title
+          outputs:
+            - name: book
+
+          run:
+            path: /bin/bash
+            args:
+              - -cxe
+              - |
+                exec 2> >(tee book/stderr >&2)
+                neb get -r -d "./temp" "$(cat book-title/server | cut -f1 -d".")" "$(cat book-title/collection_id)" "$(cat book-title/version)"
+                mv temp/* book
 
     on_failure:
       put: event-update
@@ -99,9 +120,29 @@ jobs:
       - task: look-up-book
         file: pdf-spike/bakery/tasks/t-book-lookup.yml
       - get: s3
-    #- get: cnx-recipes
       - task: assemble-book-via-neb
-        file: pdf-spike/bakery/tasks/t-assemble-book.yml
+        #file: pdf-spike/bakery/tasks/t-assemble-book.yml
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source:
+              repository: openstax/nebuchadnezzar
+              tag: latest
+
+          inputs:
+            - name: s3
+          outputs:
+            - name: book
+
+          run:
+            path: /bin/bash
+            args:
+              - -cxe
+              - |
+                exec 2> >(tee book/stderr >&2)
+                rm -f s3/stderr
+                neb assemble "s3/book" "./book"
 
     on_failure:
       put: event-update
@@ -124,7 +165,36 @@ jobs:
       - get: s3
       - get: cnx-recipes
       - task: bake-book-via-easy-bake
-        file: pdf-spike/bakery/tasks/t-bake-book.yml
+        #file: pdf-spike/bakery/tasks/t-bake-book.yml
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source:
+              repository: openstax/cnx-easybake
+
+          inputs:
+            - name: book-title
+            - name: s3
+            - name: cnx-recipes
+          outputs:
+            - name: book
+
+          run:
+            path: /bin/bash
+            args:
+              - -cxe
+              - |
+                exec 2> >(tee book/stderr >&2)
+                rm -f s3/stderr
+                book_dir="book"
+                cnx-easybake "cnx-recipes/recipes/output/$(cat book-title/recipe).css" "s3/$book_dir/collection.assembled.xhtml" "$book_dir/collection.baked.xhtml"
+                style_file="cnx-recipes/styles/output/$(cat book-title/name)-pdf.css"
+                if [ -f "$style_file" ]
+                then
+                  cp "$style_file" $book_dir/
+                  sed -i "s%<\\/head>%<link rel=\"stylesheet\" type=\"text/css\" href=\"$(basename $style_file)\" />&%" "$book_dir/collection.baked.xhtml"
+                fi
 
     on_failure:
       put: event-update
@@ -146,7 +216,28 @@ jobs:
         file: pdf-spike/bakery/tasks/t-book-lookup.yml
       - get: s3
       - task: mathify-book-via-mathify
-        file: pdf-spike/bakery/tasks/t-mathify-book.yml
+        #file: pdf-spike/bakery/tasks/t-mathify-book.yml
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source:
+              repository: openstax/mathify
+              tag: latest
+
+          inputs:
+            - name: s3
+          outputs:
+            - name: book
+
+          run:
+            path: /bin/bash
+            args:
+              - -cxe
+              - |
+                exec 2> >(tee book/stderr >&2)
+                rm -f s3/stderr
+                node /src/typeset/start -i "s3/book/collection.baked.xhtml" -o "book/collection.mathified.xhtml" -f svg
 
     on_failure:
       put: event-update
@@ -168,7 +259,30 @@ jobs:
         file: pdf-spike/bakery/tasks/t-book-lookup.yml
       - get: s3
       - task: pdf-book-via-princexml
-        file: pdf-spike/bakery/tasks/t-build-pdf.yml
+        #file: pdf-spike/bakery/tasks/t-build-pdf.yml
+        config:
+          platform: linux
+          image_resource:
+            type: docker-image
+            source:
+              repository: openstax/princexml
+              tag: latest
+          inputs:
+            - name: book-title
+            - name: s3
+          outputs:
+            - name: artifacts
+
+          run:
+            user: root
+            path: /bin/bash
+            args:
+              - -cxe
+              - |
+                exec 2> >(tee s3/book/stderr >&2)
+                rm -f artifacts/stderr
+                prince -v --output="artifacts/$(cat book-title/name).pdf" "s3/book/collection.assembled.xhtml"
+                echo -n "https://ce-pdf-spike.s3.amazonaws.com/artifacts/$(cat book-title/name).pdf" >artifacts/pdf_url
       - put: s3-artifacts
         params:
           file: artifacts/*.pdf
