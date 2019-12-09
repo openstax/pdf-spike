@@ -1,6 +1,7 @@
 import json
 import requests
 
+from src.utils import msg
 
 def build_url(api_root, *args):
     parts = [api_root]
@@ -12,16 +13,19 @@ def build_url(api_root, *args):
 def get_events(api_root):
     url = build_url(api_root, "events")
     response = requests.get(url)
+    msg(response.text)
     return response.json()
 
 
 def get_event(api_root, event_id):
     url = build_url(api_root, "events", event_id)
     response = requests.get(url)
+    msg(response.text)
     return response.json()
 
 
 def update_event(api_root, event_id, data):
     url = build_url(api_root, "events", event_id)
     response = requests.put(url, data=json.dumps(data))
+    msg(response.text)
     return response.json()
