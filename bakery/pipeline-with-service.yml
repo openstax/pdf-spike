@@ -36,7 +36,7 @@ resources:
     source:
       uri: https://github.com/openstax/cnx-recipes.git
 
-  - name: pdf-spike
+  - name: job-instructions
     type: git
     source:
       uri: https://github.com/openstax/pdf-spike.git
@@ -48,7 +48,7 @@ resources:
       api_root: ((pdf-job-queue-url))
       status_id: 1
 
-  - name: event-update
+  - name: event-status-updater
     type: workflow-events
     source:
       api_root: ((pdf-job-queue-url))
@@ -60,13 +60,13 @@ jobs:
       - get: workflow-events-queued
         trigger: true
         version: every
-      - put: event-update
+      - put: event-status-updater
         params:
           id: workflow-events-queued/id
           status_id: "2" #Assigned
 
     on_success:
-      put: event-update
+      put: event-status-updater
       params:
         id: workflow-events-queued/id
         status_id: "3" #Processing
@@ -76,7 +76,7 @@ jobs:
       - get: workflow-events-queued
         trigger: true
         passed: [claim-work]
-      - get: pdf-spike
+      - get: job-instructions
       - task: look-up-book
         #file: pdf-spike/bakery/tasks/t-book-lookup.yml
         config:
@@ -152,7 +152,7 @@ jobs:
                 mv temp/* book
 
     on_failure:
-      put: event-update
+      put: event-status-updater
       params:
         id: workflow-events-queued/id
         status_id: "4" #Failed
@@ -164,7 +164,7 @@ jobs:
       - get: workflow-events-queued
         trigger: true
         passed: [fetch-book]
-      - get: pdf-spike
+      - get: job-instructions
       - get: s3
       - task: assemble-book-via-neb
         #file: pdf-spike/bakery/tasks/t-assemble-book.yml
@@ -191,7 +191,7 @@ jobs:
                 neb assemble "s3/book" "./book"
 
     on_failure:
-      put: event-update
+      put: event-status-updater
       params:
         id: workflow-events-queued/id
         status_id: "4" #Failed
@@ -205,7 +205,7 @@ jobs:
       - get: workflow-events-queued
         trigger: true
         passed: [assemble-book]
-      - get: pdf-spike
+      - get: job-instructions
       - get: s3
       - get: cnx-recipes
       - task: bake-book-via-easy-bake
@@ -240,7 +240,7 @@ jobs:
                 fi
 
     on_failure:
-      put: event-update
+      put: event-status-updater
       params:
         id: workflow-events-queued/id
         status_id: "4" #Failed
@@ -254,7 +254,7 @@ jobs:
       - get: workflow-events-queued
         trigger: true
         passed: [bake-book]
-      - get: pdf-spike
+      - get: job-instructions
       - get: s3
       - task: mathify-book-via-mathify
         #file: pdf-spike/bakery/tasks/t-mathify-book.yml
@@ -281,7 +281,7 @@ jobs:
                 node /src/typeset/start -i "s3/book/collection.baked.xhtml" -o "book/collection.mathified.xhtml" -f svg
 
     on_failure:
-      put: event-update
+      put: event-status-updater
       params:
         id: workflow-events-queued/id
         status_id: "4" #Failed
@@ -295,7 +295,7 @@ jobs:
       - get: workflow-events-queued
         trigger: true
         passed: [mathify-book]
-      - get: pdf-spike
+      - get: job-instructions
       - get: s3
       - task: pdf-book-via-princexml
         #file: pdf-spike/bakery/tasks/t-build-pdf.yml
@@ -328,12 +328,12 @@ jobs:
           content_type: application/pdf
 
     on_failure:
-      put: event-update
+      put: event-status-updater
       params:
         id: workflow-events-queued/id
         status_id: "4" #Failed
     on_success:
-      put: event-update
+      put: event-status-updater
       params:
         id: workflow-events-queued/id
         status_id: "5"
