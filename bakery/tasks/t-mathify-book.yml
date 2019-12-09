@@ -7,7 +7,7 @@ image_resource:
     tag: latest
 
 inputs:
-  - name: s3
+  - name: s3-xhtml
 outputs:
   - name: book
 
@@ -17,5 +17,5 @@ run:
     - -cxe
     - |
       exec 2> >(tee book/stderr >&2)
-      rm -f s3/stderr
-      node /src/typeset/start -i "s3/book/collection.baked.xhtml" -o "book/collection.mathified.xhtml" -f svg
+      rm -f s3-xhtml/stderr
+      node /src/typeset/start -i "s3-xhtml/book/collection.baked.xhtml" -o "book/collection.mathified.xhtml" -f svg

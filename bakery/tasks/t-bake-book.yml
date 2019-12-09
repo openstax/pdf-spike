@@ -7,7 +7,7 @@ image_resource:
 
 inputs:
   - name: book-title
-  - name: s3
+  - name: s3-xhtml
   - name: cnx-recipes
 outputs:
   - name: book
@@ -18,9 +18,9 @@ run:
     - -cxe
     - |
       exec 2> >(tee book/stderr >&2)
-      rm -f s3/stderr
+      rm -f s3-xhtml/stderr
       book_dir="book"
-      cnx-easybake "cnx-recipes/recipes/output/$(cat book-title/recipe).css" "s3/$book_dir/collection.assembled.xhtml" "$book_dir/collection.baked.xhtml"
+      cnx-easybake "cnx-recipes/recipes/output/$(cat book-title/recipe).css" "s3-xhtml/$book_dir/collection.assembled.xhtml" "$book_dir/collection.baked.xhtml"
       style_file="cnx-recipes/styles/output/$(cat book-title/name)-pdf.css"
       if [ -f "$style_file" ]
       then

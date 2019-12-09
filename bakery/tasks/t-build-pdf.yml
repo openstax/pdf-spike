@@ -7,7 +7,7 @@ image_resource:
     tag: latest
 inputs:
   - name: book-title
-  - name: s3
+  - name: s3-xhtml
 outputs:
   - name: artifacts
 
@@ -17,7 +17,7 @@ run:
   args:
     - -cxe
     - |
-      exec 2> >(tee s3/book/stderr >&2)
-      rm -f artifacts/stderr
-      prince -v --output="artifacts/$(cat book-title/name).pdf" "s3/book/collection.assembled.xhtml"
+      exec 2> >(tee s3-xhtml/book/stderr >&2)
+      rm -f s3-xhtml/stderr
+      prince -v --output="artifacts/$(cat book-title/name).pdf" "s3-xhtml/book/collection.mathified.xhtml"
       echo -n "https://ce-pdf-spike.s3.amazonaws.com/artifacts/$(cat book-title/name).pdf" >artifacts/pdf_url

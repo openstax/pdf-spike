@@ -7,7 +7,7 @@ image_resource:
     tag: latest
 
 inputs:
-  - name: s3
+  - name: s3-cnxml
 outputs:
   - name: book
 
@@ -17,5 +17,5 @@ run:
     - -cxe
     - |
       exec 2> >(tee book/stderr >&2)
-      rm -f s3/stderr
-      neb assemble "s3/book" "./book"
+      rm -f s3-cnxml/stderr
+      neb assemble "s3-cnxml/book" "./book"
