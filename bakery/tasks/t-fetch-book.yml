@@ -17,5 +17,11 @@ run:
     - -cxe
     - |
       exec 2> >(tee book/stderr >&2)
+      cp book-title/id              book/id
+      cp book-title/collection_id   book/collection_id
+      cp book-title/version         book/version
+      cp book-title/server          book/server
+      cp book-title/name            book/name
+      cp book-title/recipe          book/recipe
       neb get -r -d "./temp" "$(cat book-title/server | cut -f1 -d".")" "$(cat book-title/collection_id)" "$(cat book-title/version)"
       mv temp/* book

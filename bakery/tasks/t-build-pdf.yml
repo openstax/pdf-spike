@@ -6,7 +6,6 @@ image_resource:
     repository: openstax/princexml
     tag: latest
 inputs:
-  - name: book-title
   - name: s3
 outputs:
   - name: artifacts
@@ -19,5 +18,5 @@ run:
     - |
       exec 2> >(tee s3/book/stderr >&2)
       rm -f artifacts/stderr
-      prince -v --output="artifacts/$(cat book-title/name).pdf" "s3/book/collection.assembled.xhtml"
-      echo -n "https://ce-pdf-spike.s3.amazonaws.com/artifacts/$(cat book-title/name).pdf" >artifacts/pdf_url
+      prince -v --output="artifacts/$(cat s3/book/name).pdf" "s3/book/collection.assembled.xhtml"
+      echo -n "https://ce-pdf-spike.s3.amazonaws.com/artifacts/$(cat s3/book/name).pdf" >artifacts/pdf_url

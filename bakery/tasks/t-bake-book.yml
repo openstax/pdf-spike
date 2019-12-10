@@ -6,7 +6,6 @@ image_resource:
     repository: openstax/cnx-easybake
 
 inputs:
-  - name: book-title
   - name: s3
   - name: cnx-recipes
 outputs:
@@ -20,8 +19,8 @@ run:
       exec 2> >(tee book/stderr >&2)
       rm -f s3/stderr
       book_dir="book"
-      cnx-easybake "cnx-recipes/recipes/output/$(cat book-title/recipe).css" "s3/$book_dir/collection.assembled.xhtml" "$book_dir/collection.baked.xhtml"
-      style_file="cnx-recipes/styles/output/$(cat book-title/name)-pdf.css"
+      cnx-easybake "cnx-recipes/recipes/output/$(cat s3/book/recipe).css" "s3/$book_dir/collection.assembled.xhtml" "$book_dir/collection.baked.xhtml"
+      style_file="cnx-recipes/styles/output/$(cat s3/book/name)-pdf.css"
       if [ -f "$style_file" ]
       then
         cp "$style_file" $book_dir/
