@@ -161,10 +161,9 @@ jobs:
 
   - name: assemble-book
     plan:
-      - get: workflow-events-queued
+      - get: job-instructions
         trigger: true
         passed: [fetch-book]
-      - get: job-instructions
       - get: s3
       - task: assemble-book-via-neb
         #file: pdf-spike/bakery/tasks/t-assemble-book.yml
@@ -193,7 +192,7 @@ jobs:
     on_failure:
       put: event-status-updater
       params:
-        id: workflow-events-queued/id
+        id: s3/book/id
         status_id: "4" #Failed
     on_success:
       put: s3
@@ -202,10 +201,9 @@ jobs:
 
   - name: bake-book
     plan:
-      - get: workflow-events-queued
+      - get: job-instructions
         trigger: true
         passed: [assemble-book]
-      - get: job-instructions
       - get: s3
       - get: cnx-recipes
       - task: bake-book-via-easy-bake
@@ -242,7 +240,7 @@ jobs:
     on_failure:
       put: event-status-updater
       params:
-        id: workflow-events-queued/id
+        id: s3/book/id
         status_id: "4" #Failed
     on_success:
       put: s3
@@ -251,10 +249,9 @@ jobs:
 
   - name: mathify-book
     plan:
-      - get: workflow-events-queued
+      - get: job-instructions
         trigger: true
         passed: [bake-book]
-      - get: job-instructions
       - get: s3
       - task: mathify-book-via-mathify
         #file: pdf-spike/bakery/tasks/t-mathify-book.yml
@@ -283,7 +280,7 @@ jobs:
     on_failure:
       put: event-status-updater
       params:
-        id: workflow-events-queued/id
+        id: s3/book/id
         status_id: "4" #Failed
     on_success:
       put: s3
@@ -292,10 +289,9 @@ jobs:
 
   - name: generate-pdf
     plan:
-      - get: workflow-events-queued
+      - get: job-instructions
         trigger: true
         passed: [mathify-book]
-      - get: job-instructions
       - get: s3
       - task: pdf-book-via-princexml
         #file: pdf-spike/bakery/tasks/t-build-pdf.yml
@@ -330,11 +326,11 @@ jobs:
     on_failure:
       put: event-status-updater
       params:
-        id: workflow-events-queued/id
+        id: s3/book/id
         status_id: "4" #Failed
     on_success:
       put: event-status-updater
       params:
-        id: workflow-events-queued/id
+        id: s3/book/id
         status_id: "5"
         pdf_url: artifacts/pdf_url
