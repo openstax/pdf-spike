@@ -6,6 +6,7 @@ image_resource:
     repository: openstax/cnx-easybake
 
 inputs:
+  - name: workflow-events-queued
   - name: book-title
   - name: s3-job-dir
   - name: cnx-recipes
@@ -20,7 +21,7 @@ run:
       exec 2> >(tee book/stderr >&2)
       rm -f s3-job-dir/stderr
       book_dir="book"
-      cnx-easybake "cnx-recipes/recipes/output/$(cat book-title/recipe).css" "s3-job-dir/$book_dir/collection.assembled.xhtml" "$book_dir/collection.baked.xhtml"
+      cnx-easybake "cnx-recipes/recipes/output/$(cat book-title/recipe).css" "s3-job-dir/$(cat workflow-events-queued/id)/$book_dir/collection.assembled.xhtml" "$book_dir/collection.baked.xhtml"
       style_file="cnx-recipes/styles/output/$(cat book-title/name)-pdf.css"
       if [ -f "$style_file" ]
       then

@@ -7,6 +7,7 @@ image_resource:
     tag: latest
 
 inputs:
+  - name: workflow-events-queued
   - name: s3-job-dir
 outputs:
   - name: book
@@ -18,4 +19,4 @@ run:
     - |
       exec 2> >(tee book/stderr >&2)
       rm -f s3-job-dir/stderr
-      neb assemble "s3-job-dir/book" "./book"
+      neb assemble "s3-job-dir/$(cat workflow-events-queued/id)/book" "./book"

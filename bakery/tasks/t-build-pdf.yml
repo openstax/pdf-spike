@@ -6,6 +6,7 @@ image_resource:
     repository: openstax/princexml
     tag: latest
 inputs:
+  - name: workflow-events-queued
   - name: book-title
   - name: s3-job-dir
 outputs:
@@ -19,5 +20,5 @@ run:
     - |
       exec 2> >(tee s3-job-dir/book/stderr >&2)
       rm -f s3-job-dir/stderr
-      prince -v --output="artifacts/$(cat book-title/name).pdf" "s3-job-dir/book/collection.mathified.xhtml"
+      prince -v --output="artifacts/$(cat book-title/name).pdf" "s3-job-dir/$(cat workflow-events-queued/id)/book/collection.mathified.xhtml"
       echo -n "https://ce-pdf-spike.s3.amazonaws.com/artifacts/$(cat book-title/name).pdf" >artifacts/pdf_url
