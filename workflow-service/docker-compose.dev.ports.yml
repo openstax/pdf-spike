@@ -13,3 +13,9 @@ services:
   concourse:
     ports:
       - '8100:8080'
+  docker-registry:
+    ports:
+      - '5000:5000'
+  minio:
+    ports:
+      - '9000:9000'

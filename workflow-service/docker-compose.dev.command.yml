@@ -15,3 +15,6 @@ services:
       --web
   concourse:
     command: quickstart
+  minio:
+    command: server --compat /data
+

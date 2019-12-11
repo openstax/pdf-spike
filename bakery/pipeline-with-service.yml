@@ -1,35 +1,31 @@
 ---
 resource_types:
-  - name: s3-simple
-    type: docker-image
-    source:
-      repository: 18fgsa/s3-resource-simple
-
   - name: workflow-events
     type: docker-image
     source:
       repository: openstax/workflow-event-resource
 
-resources:
-  - name: s3
-    type: s3-simple
+  - name: s3-dir
+    type: docker-image
     source:
-      access_key_id: ((aws-access-key-id))
-      secret_access_key: ((aws-secret-access-key))
-      bucket: ((s3bucket))
-      region: ((s3region))
-      options:
-        - "--exclude '*'"
-        - "--include 'book/*'"
+      repository: docker-registry:5000/s3-dir-resource
+      tag: 0.1
+      insecure_registries: ["docker-registry:5000"]
 
-  - name: s3-artifacts
-    type: s3
+resources:
+  - name: s3-job-dir
+    type: s3-dir
     source:
-      bucket: ((s3bucket))
-      access_key_id: ((aws-access-key-id))
-      secret_access_key: ((aws-secret-access-key))
-      skip_download: true
-      regexp: artifacts/(.*).pdf
+      service:
+        bucket: ((s3-bucket))
+        region: ((s3-region))
+        endpoint: ((s3-endpoint))
+      credentials:
+        access_key_id: ((s3-access-key-id))
+        secret_access_key: ((s3-secret-access-key))
+      filters:
+        regexp: (\d+)
+        version: latest
 
   - name: cnx-recipes
     type: git
@@ -40,13 +36,14 @@ resources:
     type: git
     source:
       uri: https://github.com/openstax/pdf-spike.git
-      branch: event-service-pipeline-pdf-url
+      branch: s3-resource-custom
 
   - name: workflow-events-queued
     type: workflow-events
     source:
       api_root: ((pdf-job-queue-url))
       status_id: 1
+    check_every: 20s
 
   - name: event-update
     type: workflow-events
@@ -77,7 +74,6 @@ jobs:
         trigger: true
         passed: [claim-work]
       - get: pdf-spike
-    #- get: cnx-recipes
       - task: look-up-book
         file: pdf-spike/bakery/tasks/t-book-lookup.yml
       - task: fetch-book-via-neb
@@ -89,7 +85,10 @@ jobs:
         id: workflow-events-queued/id
         status_id: "4" #Failed
     on_success:
-      put: s3
+      put: s3-job
+      params:
+        dir: workflow-events-queued/id
+        glob: book/**/*
 
   - name: assemble-book
     plan:
@@ -99,8 +98,7 @@ jobs:
       - get: pdf-spike
       - task: look-up-book
         file: pdf-spike/bakery/tasks/t-book-lookup.yml
-      - get: s3
-    #- get: cnx-recipes
+      - get: s3-job
       - task: assemble-book-via-neb
         file: pdf-spike/bakery/tasks/t-assemble-book.yml
 
@@ -110,9 +108,10 @@ jobs:
         id: workflow-events-queued/id
         status_id: "4" #Failed
     on_success:
-      put: s3
+      put: s3-job-dir
       params:
-        path: book
+        dir: workflow-events-queued/id
+        glob: book/collection.assembled.xhtml
 
   - name: bake-book
     plan:
@@ -122,7 +121,7 @@ jobs:
       - get: pdf-spike
       - task: look-up-book
         file: pdf-spike/bakery/tasks/t-book-lookup.yml
-      - get: s3
+      - get: s3-job-dir
       - get: cnx-recipes
       - task: bake-book-via-easy-bake
         file: pdf-spike/bakery/tasks/t-bake-book.yml
@@ -133,9 +132,10 @@ jobs:
         id: workflow-events-queued/id
         status_id: "4" #Failed
     on_success:
-      put: s3
+      put: s3-job-dir
       params:
-        path: book
+        dir: workflow-events-queued/id
+        glob: book/collection.baked.xhtml
 
   - name: mathify-book
     plan:
@@ -145,7 +145,7 @@ jobs:
       - get: pdf-spike
       - task: look-up-book
         file: pdf-spike/bakery/tasks/t-book-lookup.yml
-      - get: s3
+      - get: s3-job-dir
       - task: mathify-book-via-mathify
         file: pdf-spike/bakery/tasks/t-mathify-book.yml
 
@@ -155,9 +155,10 @@ jobs:
         id: workflow-events-queued/id
         status_id: "4" #Failed
     on_success:
-      put: s3
+      put: s3-job-dir
       params:
-        path: book
+        dir: workflow-events-queued/id
+        glob: book/collection.mathified.xhtml
 
   - name: generate-pdf
     plan:
@@ -167,14 +168,13 @@ jobs:
       - get: pdf-spike
       - task: look-up-book
         file: pdf-spike/bakery/tasks/t-book-lookup.yml
-      - get: s3
+      - get: s3-job-dir
       - task: pdf-book-via-princexml
         file: pdf-spike/bakery/tasks/t-build-pdf.yml
-      - put: s3-artifacts
+      - put: s3-job-dir
         params:
-          file: artifacts/*.pdf
-          acl: public-read
-          content_type: application/pdf
+          dir: workflow-events-queued/id
+          glob: artifacts/*.pdf
 
     on_failure:
       put: event-update
